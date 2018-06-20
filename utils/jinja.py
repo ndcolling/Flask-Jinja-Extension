@@ -20,8 +20,26 @@ def get_template_vars(template_string, flask_app):
     data = {}
     # first get the attrs (nested) nodes. For ex: {{ this.something }}
     attrs = parsed.find_all(nodes.Getattr)
+
+    def _set_default(data, attr, node):
+        if isinstance(node, nodes.Getattr):
+            # Node is a Getattr (nested attribute). The attrs are inversed, so call recursively to build the dict:
+            dict_ref = _set_default(data, node.attr, node.node)
+            if isinstance(dict_ref[node.attr], dict):
+                if attr not in dict_ref[node.attr]:
+                    dict_ref[node.attr].update({attr: ""})
+            else:
+                dict_ref[node.attr] = {attr: ""}
+            return dict_ref[node.attr]
+        else:
+            if node.name in data and isinstance(data[node.name], dict):
+                if attr not in data[node.name]:
+                    data[node.name][attr] = ""
+            else:
+                data.setdefault(node.name, {})[attr] = ""
+            return data[node.name]
     for a in attrs:
-        data.setdefault(a.node.name, {})[a.attr] = ""
+        _set_default(data, a.attr, a.node)
     # now check meta (name nodes) and set if they are missing:
     _vars = meta.find_undeclared_variables(parsed)
     for v in _vars:

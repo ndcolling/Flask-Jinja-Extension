@@ -81,8 +81,9 @@ class TestGetTemplateVars(unittest.TestCase):
 
     def test_expected_failure_second_level_deep(self):
         app = Flask(__name__)
-        template_string = '<p>Hello {{ user.name.first }}!</p>'
-        self.assertRaises(AttributeError, get_template_vars, template_string, app)
+        template_string = '<p>{{ user.greeting }} {{ user.info.name.first }} {{ user.info.name.last }}!</p>'
+        result = get_template_vars(template_string, app)
+        self.assertDictEqual(result, {"user": {"info": {"name": {"first": "", "last": ""}}, "greeting": ""}})
 
     def test_for_with_deep_nesting(self):
         app = Flask(__name__)
@@ -97,4 +98,6 @@ class TestGetTemplateVars(unittest.TestCase):
                 </li>
             {% endfor %}
         '''
-        self.assertRaises(AttributeError, get_template_vars, template_string, app)
+        result = get_template_vars(template_string, app)
+        self.assertDictEqual(result, {'article_list': [{'headline': '', 'link': '', 'source': {'publisher': ''}}],
+                                      'CDN_HOST': 'mycdn.host.com'})
