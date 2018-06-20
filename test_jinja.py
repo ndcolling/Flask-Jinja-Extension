@@ -1,5 +1,5 @@
 from flask import Flask
-from utils.jinja import get_template_vars
+from jinja import get_template_vars
 import unittest
 
 
